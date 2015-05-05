@@ -41,6 +41,7 @@ package org.dcm4chee.conf.cdi;
 
 import org.dcm4che3.conf.api.DicomConfigurationCustomizer;
 import org.dcm4che3.conf.core.api.ConfigurationException;
+import org.dcm4che3.conf.core.storage.SingleJsonFileConfigurationStorage;
 import org.dcm4che3.conf.dicom.DicomConfigurationBuilder;
 import org.dcm4che3.net.AEExtension;
 import org.dcm4che3.net.DeviceExtension;
@@ -74,6 +75,8 @@ public class DicomConfigurationExtenderEE {
     @Inject
     Instance<HL7ApplicationExtension> hl7ApplicationExtensions;
 
+    @Inject
+    InfinispanConfigurationCacheFactory infinispanConfigurationCacheFactory;
 
     @Produces
     @ApplicationScoped
@@ -89,6 +92,14 @@ public class DicomConfigurationExtenderEE {
                 for (HL7ApplicationExtension ext : hl7ApplicationExtensions)
                     builder.registerHL7ApplicationExtension(ext.getClass());
 
+
+                builder.registerCustomConfigurationStorage(
+                        new CachedDicomConfigurationDecorator(
+                                new SingleJsonFileConfigurationStorage("../standalone/configuration/sample-config.json"),
+                                infinispanConfigurationCacheFactory.getDevicesCache(),
+                                infinispanConfigurationCacheFactory.getMetadataCache()
+                        )
+                );
 
                 // TODO register DB storage if corresponding CDI bean is available
                 // TODO wrap the storage bean in Infinispan decorator when configured
