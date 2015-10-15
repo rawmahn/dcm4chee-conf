@@ -49,6 +49,8 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Alexander Hoermandinger <alexander.hoermandinger@agfa.com>
@@ -91,7 +93,26 @@ public class ConfigNotificationService {
         // then everybody else gets notified
         event.fire(changeEvent);
     }
-    
+
+    @Inject
+    ConfigNotificationService notificationService;
+
+    private void ts() {
+        notificationService.sendLocalScopedConfigChangeNotification(new ConfigChangeEvent() {
+            @Override
+            public CONTEXT getContext() {
+                return CONTEXT.CONFIG_CHANGE;
+            }
+
+            @Override
+            public List<String> getChangedPaths() {
+                ArrayList<String> paths = new ArrayList<>();
+                paths.add("/");
+                return paths;
+            }
+        });
+    }
+
     private void invalidateConfigCache() {
         try {
             // TODO: can optimize by refreshing only the changed paths
