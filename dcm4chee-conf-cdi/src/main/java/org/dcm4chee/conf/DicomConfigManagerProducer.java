@@ -45,7 +45,7 @@ import org.dcm4che3.conf.core.api.BatchRunner;
 import org.dcm4che3.conf.core.api.ConfigurableClassExtension;
 import org.dcm4che3.conf.core.api.Configuration;
 import org.dcm4che3.conf.core.normalization.DefaultsAndNullFilterDecorator;
-import org.dcm4che3.conf.core.olock.OptimisticLockingConfiguration;
+import org.dcm4che3.conf.core.olock.HashBasedOptimisticLockingConfiguration;
 import org.dcm4che3.conf.core.util.Extensions;
 import org.dcm4che3.conf.dicom.CommonDicomConfigurationWithHL7;
 import org.dcm4chee.conf.storage.ConfigurationEJB;
@@ -89,7 +89,7 @@ public class DicomConfigManagerProducer {
         List<Class> allExtensionClasses = resolveExtensionsList();
 
         // olocking
-        storage = new OptimisticLockingConfiguration(
+        storage = new HashBasedOptimisticLockingConfiguration(
                 configStorage,
                 allExtensionClasses,
 
