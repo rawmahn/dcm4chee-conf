@@ -40,8 +40,16 @@
 
 package org.dcm4chee.cache;
 
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.VersioningScheme;
+import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.transaction.LockingMode;
+import org.infinispan.transaction.TransactionMode;
+import org.infinispan.util.concurrent.IsolationLevel;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -53,16 +61,41 @@ import javax.enterprise.inject.spi.InjectionPoint;
 @ApplicationScoped
 public class CacheProducer {
 
+    @PostConstruct
+    public void init() {
+        customCacheManager = new DefaultCacheManager(this.defaultCacheManager.getCacheManagerConfiguration());
+        customCacheManager.defineConfiguration("fetch-service",
+                new ConfigurationBuilder()
+                        .clustering()
+                        .cacheMode(CacheMode.REPL_SYNC)
+                        .locking()
+                        .isolationLevel(IsolationLevel.REPEATABLE_READ)
+                        .writeSkewCheck(true)
+                        .versioning()
+                        .scheme(VersioningScheme.SIMPLE)
+                        .enable()
+                        .transaction()
+                        .lockingMode(LockingMode.OPTIMISTIC)
+                        .transactionMode(TransactionMode.TRANSACTIONAL)
+                        .syncCommitPhase(true)
+                        .recovery()
+                        .disable()
+                        .jmxStatistics()
+                        .build());
+    }
+
     @Resource(lookup="java:jboss/infinispan/container/dcm4chee")
     private EmbeddedCacheManager defaultCacheManager;
 
+    private DefaultCacheManager customCacheManager;
 
     @SuppressWarnings("unchecked")
     @Produces
     @CacheByName
     Cache getCache(InjectionPoint point) {
+
         String cacheName = point.getAnnotated().getAnnotation(CacheByName.class).value();
-        return new InfinispanWrapper(defaultCacheManager.getCache(cacheName, false));
+        return new InfinispanWrapper(customCacheManager.getCache(cacheName));
     }
 
 }
