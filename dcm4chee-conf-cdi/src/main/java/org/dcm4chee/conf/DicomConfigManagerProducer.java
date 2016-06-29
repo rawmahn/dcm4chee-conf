@@ -40,6 +40,7 @@
 
 package org.dcm4chee.conf;
 
+import org.dcm4che3.conf.api.TCGroupsProvider;
 import org.dcm4che3.conf.api.internal.DicomConfigurationManager;
 import org.dcm4che3.conf.core.api.ConfigurableClassExtension;
 import org.dcm4che3.conf.core.api.Configuration;
@@ -78,6 +79,8 @@ public class DicomConfigManagerProducer {
     @Inject
     ConfigurableExtensionsResolver extensionsProvider;
 
+    @Inject
+    TCGroupsProvider tcGroupsProvider;
 
     @Produces
     @ApplicationScoped
