@@ -288,9 +288,9 @@ public class ConfigRESTServicesServlet {
     }
 
     @GET
-    @Path("/pathByUUID")
+    @Path("/pathByUUID/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    org.dcm4che3.conf.core.api.Path getPathByUUID(String uuid) {
+    org.dcm4che3.conf.core.api.Path getPathByUUID(@PathParam(value = "uuid") String uuid) {
         return configurationManager.getConfigurationStorage().getPathByUUID(uuid);
     }
 
