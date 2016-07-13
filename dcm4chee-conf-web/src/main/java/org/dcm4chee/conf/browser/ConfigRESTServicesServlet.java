@@ -2,7 +2,11 @@ package org.dcm4chee.conf.browser;
 
 import org.dcm4che3.conf.api.TCConfiguration;
 import org.dcm4che3.conf.api.internal.DicomConfigurationManager;
+import org.dcm4che3.conf.core.Nodes;
 import org.dcm4che3.conf.core.api.*;
+import org.dcm4che3.conf.core.api.internal.ConfigProperty;
+import org.dcm4che3.conf.core.util.PathFollower;
+import org.dcm4che3.conf.core.util.PathPattern;
 import org.dcm4che3.conf.dicom.DicomPath;
 import org.dcm4che3.net.*;
 import org.dcm4che3.net.hl7.HL7ApplicationExtension;
@@ -26,6 +30,7 @@ import java.util.*;
 @Produces(MediaType.APPLICATION_JSON)
 public class ConfigRESTServicesServlet {
     public static final String NOTIFICATIONS_ENABLED_PROPERTY = "org.dcm4che.conf.notifications";
+    private static final PathPattern referencePattern = new PathPattern(Configuration.REFERENCE_BY_UUID_PATTERN);
 
     public static final Logger log = LoggerFactory.getLogger(ConfigRESTServicesServlet.class);
 
@@ -290,9 +295,40 @@ public class ConfigRESTServicesServlet {
     @GET
     @Path("/pathByUUID/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    org.dcm4che3.conf.core.api.Path getPathByUUID(@PathParam(value = "uuid") String uuid) {
+    public org.dcm4che3.conf.core.api.Path getPathByUUID(@PathParam(value = "uuid") String uuid) {
         return configurationManager.getConfigurationStorage().getPathByUUID(uuid);
     }
+
+    /**
+     * Returns a fully processed node, i.e. including defaults, hashes, etc
+     * @param pathStr
+     * @return
+     */
+    @GET
+    @Path("/node")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Object getConfigurationNode(@QueryParam(value = "path") String pathStr) {
+
+        org.dcm4che3.conf.core.api.Path path;
+        PathPattern.PathParser pathParser = referencePattern.parseIfMatches(pathStr);
+        if (pathParser != null) {
+            // it's uuid reference
+            String uuid = pathParser.getParam("uuid");
+            path = getPathByUUID(uuid);
+            if (path == null) return null;
+        } else {
+            // it's simple path (will throw exception if not)
+            path = org.dcm4che3.conf.core.api.Path.fromSimpleEscapedPath(pathStr);
+        }
+
+        ConfigProperty last = PathFollower.traceProperties(configurationManager.getTypeSafeConfiguration().getRootClass(), path).getLast();
+
+        if (!last.isConfObject())
+            throw new IllegalArgumentException("Path " + pathStr + " is not pointing to a configurable object");
+
+        return configurationManager.getConfigurationStorage().getConfigurationNode(pathStr, last.getRawClass());
+    }
+
 
     @GET
     @Path("/schemas")

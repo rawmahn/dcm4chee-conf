@@ -39,13 +39,13 @@ public class TCGroupsCachingProvider implements TCGroupsProvider {
     }
 
     private TCConfiguration loadTCs() {
-        return (TCConfiguration) config.getConfigurationStorage().getConfigurationNode(DicomPath.TCGroups.path(), TCConfiguration.class);
+        return config.getTypeSafeConfiguration().load(DicomPath.TC_GROUPS_PATH, TCConfiguration.class);
     }
 
     private boolean tcsChanged(ConfigChangeEvent configChangeEvent) {
         for (String s : configChangeEvent.getChangedPaths()) {
             Path path = new Path(Nodes.simpleOrPersistablePathToPathItemsOrNull(s));
-            if (path.size()<3 || path.getPathItems().contains("dcmTransferCapabilities")) {
+            if (path.size() < 3 || path.getPathItems().contains("dcmTransferCapabilities")) {
                 return true;
             }
         }
